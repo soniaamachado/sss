@@ -26,3 +26,4 @@ Route::get(('userrole'),function(){
         ->select ('roles.id','roles.role','users.name')
         ->get();
 });
+Route::resource ('post','PostController');
