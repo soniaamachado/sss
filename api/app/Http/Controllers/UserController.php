@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Article;
 use App\user;
 use Illuminate\Http\Request;
 use Validator;
@@ -18,13 +19,7 @@ class UserController extends Controller
         //
         $users = User::all();
 
-        return response(
-            [
-                'status' => 200,
-                'data' => $users,
-                'msg' => 'Ok.',
-            ],200
-        );
+        return $users;
     }
 
     /**
@@ -46,31 +41,9 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $data = $request->only(['name', 'email', 'password', 'user_role',]);
+        $data['password'] = bcrypt($data['password']);
 
-        $validator = $request->validate([
-            'name' => 'required|max:100',
-            'email' => 'required',
-            'password' => 'required',
-            'user_role' => 'required',
-        ],
-            [
-                'name.required' => 'O campo name é obrigatório.',
-                'name.max' => 'O campo name só pode ter um máximo de 100 carateres',
-                'email.required' => 'O campo email é obrigatório.',
-                'password.required' => 'O campo password é obrigatório',
-                'user_role.required' => 'O campo user_role é obrigatório.',
-            ]);
-        if ($validator->fails()) {
-            return response(
-                [
-                    'status' => 400,
-                    'data' => $validator->errors()->all(),
-                    'msg' => 'Erro.',
-                ], 400
-            );
-        }
-
-        $user = \App\Article::create($data);
+        $user = \App\User::create($data);
 
         return response(
             [
@@ -89,13 +62,7 @@ class UserController extends Controller
      */
     public function show(user $user)
     {
-        return response(
-            [
-                'status' => 200,
-                'data' => $user,
-                'msg' => 'Ok.',
-            ],200
-        );
+       return $user;
     }
 
     /**
@@ -120,35 +87,19 @@ class UserController extends Controller
     {
         $data = $request->only(['name', 'email', 'password', 'user_role',]);
 
-        $validator = Validator::make($data,
-            [
-                'name' => 'required|max:100',
-                'email' => 'required',
-                'password' => 'required',
-                'user_role' => 'required',
-            ],
-            [
-                'name.required' => 'O campo name é obrigatório.',
-                'name.max' => 'O campo name só pode ter um máximo de 100 carateres',
-                'email.required' => 'O campo email é obrigatório.',
-                'password.required' => 'O campo password é obrigatório',
-                'user_role.required' => 'O campo user_role é obrigatório.',
-            ]);
-
-        if ($validator->fails()) {
-            return response(
-                [
-                    'status' => 400,
-                    'data' => $validator->errors()->all(),
-                    'msg' => 'Erro.',
-                ], 400
-            );
+        if ($request->only(['name'])){
+            $user->name = $data['name'];
+        }
+        if ($request->only(['email'])){
+            $user->email = $data['email'];
+        }
+        if ($request->only(['password'])){
+            $user->password = $data['password'];
+        }
+        if ($request->only(['user_role'])){
+            $user->user_role = $data['user_role'];
         }
 
-        $user->title = $data['title'];
-        $user->description = $data['description'];
-        $user->image = $data['image'];
-        $user->user_id = $data['user_id'];
         $user->save();
 
 
@@ -174,8 +125,19 @@ class UserController extends Controller
         return response(
             [
                 'status' => 200,
-                'data' => 'Utilizador apagado.',
-                'msg' => 'Ok.',
+                'data' => $user,
+                'msg' => 'Utilizador apagado com sucesso',
+            ], 200
+        );
+    }
+    public function getArticles (User $user){
+        $result = Article::with('user')->get()->where('user',$user);
+
+        return response(
+            [
+                'status' => 200,
+                'data' => $result,
+                'msg' => 'ok!',
             ], 200
         );
     }

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Article;
+use App\Http\Requests\Article\ArticleStoreRequest;
+use App\User;
 use Illuminate\Http\Request;
 use Validator;
 
@@ -39,37 +41,18 @@ class NewsController extends Controller
         //
     }
 
-    public function store(Request $request)
+    public function store(ArticleStoreRequest $request)
     {
-        //
-
         $data = $request->only(['title', 'description', 'image', 'user_id',]);
 
-        $validator = $request->validate([
-                'title' => 'required|max:150',
-                'description' => 'required',
-                'image' => 'required',
-                'user_id' => 'required|exists:users,id',
-            ],
-            [
-                'title.required' => 'O campo título é obrigatório.',
-                'title.max' => 'O campo título só pode ter um máximo de 150 carateres',
-                'description.required' => 'O campo descrição é obrigatório',
-                'image.required' => 'O campo imagem é obrigatório.',
-                'user_id.required' => 'O campo ID Utilizador é obrigatório.',
-                'user_id.exists' => 'O campo ID Utilizador tem que estar ligado a um utilizador existente.',
-            ]);
-        if ($validator->fails()) {
-            return response(
-                [
-                    'status' => 400,
-                    'data' => $validator->errors()->all(),
-                    'msg' => 'Erro.',
-                ], 400
-            );
-        }
+        $users= User::pluck('id')->toArray();
+        $data['user_id'] = array_rand($users);
+        //random user pois ainda não se sabe os id dos users
 
-        $article = \App\Article::create($data);
+        $path = $request-> file('image')->store('Article_Images');
+        $data['image']= $path;
+        //
+        $article = Article::create($data);
 
         return response(
             [
@@ -88,15 +71,8 @@ class NewsController extends Controller
      */
     public function show(Article $article)
     {
-        //
+        return $article;
 
-        return response(
-            [
-                'status' => 200,
-                'data' => $article,
-                'msg' => 'Ok.',
-            ],200
-        );
     }
 
     /**
@@ -110,65 +86,28 @@ class NewsController extends Controller
     {
         //
 
-        $data = $request->only(['title', 'description', 'image', 'user_id']);
+        $data = $request->only(['title', 'description', 'image', 'user_id',]);
 
+        $users= User::pluck('id')->toArray();
+        $data['user_id'] = array_rand($users);
+        //random user pois ainda não se sabe os id dos users
 
+        $path = $request-> file('image')->store('Article_Images');
+        $data['image']= $path;
+        //
+        $article = Article::create($data);
 
-        $validator = Validator::make($data,
-            [
-                'title' => 'required|max:255',
-                'description' => 'required',
-                'image' => 'required',
-                'user_id' => 'required|exists:users,id',
-            ],
-            [
-                'title.required' => 'O campo título é obrigatório.',
-                'title.max' => 'O campo título só pode ter um máximo de 255 carateres',
-                'description.required' => 'O campo descrição é obrigatório',
-                'image.required' => 'O campo imagem é obrigatório.',
-                'user_id.required' => 'O campo ID Utilizador é obrigatório.',
-                'user_id.exists' => 'O campo ID Utilizador tem que estar ligado a um utilizador existente.',
-            ]);
-
-        if ($validator->fails()) {
-            return response(
-                [
-                    'status' => 400,
-                    'data' => $validator->errors()->all(),
-                    'msg' => 'Erro.',
-                ], 400
-            );
-        }
-
-        $article->title = $data['title'];
-        $article->description = $data['description'];
-        $article->image = $data['image'];
-        $article->user_id = $data['user_id'];
         $article->save();
-
 
         return response(
             [
-                'status' => 200,
+                'status' => 201,
                 'data' => $article,
                 'msg' => 'Ok.',
-            ], 200
+            ], 201
         );
-
     }
 
-//    public function imageUpload (Request $request){
-//        $article = Auth::article();
-//        $article-> image = $request ['title'];
-//        $article-> update();
-//
-//        $file = $request->file('image');
-//        $filename = $request ['image'].'-'.$article->$article->id.'.jpg';
-//        if ($file){
-//            Storage::disk('local')->put($filename, File::get($file));
-//        }
-//        return redirect()->route('article');
-//    }
 
     /**
      * Remove the specified resource from storage.

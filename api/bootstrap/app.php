@@ -15,6 +15,9 @@ $app = new Illuminate\Foundation\Application(
     realpath(__DIR__.'/../')
 );
 
+$app->register(\Mpociot\ApiDoc\ApiDocGeneratorServiceProvider::class);
+
+
 /*
 |--------------------------------------------------------------------------
 | Bind Important Interfaces
